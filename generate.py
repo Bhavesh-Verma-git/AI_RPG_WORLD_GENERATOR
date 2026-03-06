@@ -18,6 +18,7 @@ Usage:
 import argparse
 import os
 import random
+import re
 import time
 
 import torch
@@ -139,11 +140,58 @@ def _complete(
 
     # Return the first line only (or up to a period/newline) to keep it clean
     completion = completion.strip()
-    # Cut at the first occurrence of a field header or double newline
+
+    # ── Step 1: Cut at any field header or double-newline (restart of generation)
     for stop in ["\n\n", "World Name:", "Description:", "NPC:", "Quest:", "Reward Item:", "Lore:"]:
         if stop in completion:
             completion = completion[:completion.index(stop)].strip()
+
+    # ── Step 2: Cut at the first single newline so we keep only one clean line
+    if "\n" in completion:
+        completion = completion[:completion.index("\n")].strip()
+
+    # ── Step 3: Cut at the end of the first complete sentence (., !, ?)
+    # This prevents mid-sentence rambling that GPT2 is prone to.
+    for end_char in [".", "!", "?"]:
+        idx = completion.find(end_char)
+        if idx != -1 and idx > 5:       # must be at least 5 chars in (not a decimal like "0.5")
+            completion = completion[:idx + 1].strip()
+            break
+
+    # ── Step 4: Hard cap at 120 characters to prevent very long single sentences
+    if len(completion) > 120:
+        # Try to cut at the last word boundary before the 120-char limit
+        completion = completion[:120].rsplit(" ", 1)[0].strip()
+        if not completion.endswith((".", "!", "?")):
+            completion += "."
+
+    # ── Step 5: Remove D&D-style stats, parenthetical numbers, math expressions
+    completion = _clean_text(completion)
+
     return completion if completion else "(not generated)"
+
+
+def _clean_text(text: str) -> str:
+    """
+    Remove game-stat artefacts that DistilGPT2 sometimes generates.
+    Strips patterns like: (5/10), 1 x 10, +2, = 0, (requires the following), etc.
+    """
+    # Remove parenthetical content that looks like stats: (5), (1/10), (Vampire), (requires...)
+    text = re.sub(r'\([^)]{0,40}\)', '', text)
+    # Remove math-like expressions: 1 x 10/10 + 2 = 0
+    text = re.sub(r'\d+\s*[x×*/+\-=]\s*\d+[\d/+\-=\s]*', '', text)
+    # Remove standalone numbers like "1" or "10" surrounded by spaces
+    text = re.sub(r'\s\d+\s', ' ', text)
+    # Remove leftover colons from stat blocks (" : " or trailing ":")
+    text = re.sub(r'\s*:\s*$', '', text)
+    # Remove stray punctuation combos left after stat removal ("- .", ": .", ", .")
+    text = re.sub(r'[\s,:\-]+\.\s*$', '.', text)
+    text = re.sub(r'[\s,:\-]+\.$', '.', text)
+    # Collapse multiple spaces into one
+    text = re.sub(r'\s{2,}', ' ', text).strip()
+    # Remove trailing lone punctuation or whitespace
+    text = text.rstrip(' ,:;-')
+    return text
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -152,48 +200,71 @@ def _complete(
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _build_name_prompt(cfg: dict) -> str:
+    # One-shot example shows the model the exact format: short 2-3 word fantasy name
     return (
-        f"A {cfg['adjectives']} RPG location name (like \"{cfg['name_example']}\"):\n"
-        f"Place Name:"
+        f"Examples of short {cfg['adjectives']} RPG world names:\n"
+        f"- {cfg['name_example']}\n"
+        f"- Thornveil Reach\n"
+        f"One new {cfg['adjectives']} RPG world name (2-4 words only, no sentences):\n"
+        f"World Name:"
     )
 
 
 def _build_description_prompt(cfg: dict, world_name: str) -> str:
+    # One-shot example shows the model: setting description, one clear sentence
     return (
-        f"Describe a {cfg['adjectives']} RPG world called \"{world_name}\" "
-        f"set in {cfg['setting']}. Write 1-2 sentences:\n"
+        f"Example — World Name: {cfg['name_example']}\n"
+        f"Description: A land {cfg['setting']}, shrouded in mystery and ancient power.\n\n"
+        f"Now describe the world called \"{world_name}\" in one sentence.\n"
         f"Description:"
     )
 
 
 def _build_npc_prompt(cfg: dict, world_name: str) -> str:
+    # Two-example few-shot: forces the model to strictly follow "Name — one sentence" format
     return (
-        f"Create a named {cfg['adjectives']} RPG character who lives in \"{world_name}\". "
-        f"They should be {cfg['npc_prefix']}. Format: Name — description.\n"
+        f"Two example NPCs for {cfg['adjectives']} RPG worlds:\n"
+        f"NPC: Mira the Ashwalker — a wandering warrior who hunts cursed beasts for coin.\n"
+        f"NPC: Darion the Frostbound — an exiled mage who speaks to the spirits of the dead.\n\n"
+        f"Write one NPC for the world \"{world_name}\". "
+        f"They are {cfg['npc_prefix']}.\n"
+        f"Do NOT include numbers, stats, game mechanics, or references to real movies or books.\n"
+        f"Format exactly: Name the Title — one sentence description.\n"
         f"NPC:"
     )
 
 
 def _build_quest_prompt(cfg: dict, world_name: str) -> str:
+    # One-shot example shows a short imperative quest description
     return (
-        f"Write a short {cfg['adjectives']} RPG quest involving a {cfg['quest_type']} "
-        f"in the world of \"{world_name}\". One sentence.\n"
+        f"Example quest for a {cfg['adjectives']} RPG world:\n"
+        f"Quest: Retrieve the stolen relic from the cursed shrine before the next blood moon.\n\n"
+        f"Write one quest for the world \"{world_name}\" involving a {cfg['quest_type']}.\n"
+        f"One sentence, starting with a verb (Retrieve, Defeat, Find, etc.):\n"
         f"Quest:"
     )
 
 
 def _build_reward_prompt(cfg: dict) -> str:
+    # Two-example few-shot: enforces "WeaponName — one sentence power" format
     return (
-        f"Name a {cfg['adjectives']} RPG weapon or item reward. "
-        f"It should be a {cfg['weapon_type']}. Format: Item Name — short description.\n"
+        f"Two example {cfg['adjectives']} RPG reward items:\n"
+        f"Reward Item: Emberbrand Sword — a blade wreathed in eternal flame that burns through armour.\n"
+        f"Reward Item: Frostfang Dagger — a crystalline knife that freezes wounds on contact.\n\n"
+        f"Write one new {cfg['adjectives']} RPG {cfg['weapon_type']} reward.\n"
+        f"Do NOT include numbers, stats, damage values, or game mechanics.\n"
+        f"Format exactly: ItemName — one sentence description of its power.\n"
         f"Reward Item:"
     )
 
 
 def _build_lore_prompt(cfg: dict, world_name: str) -> str:
+    # One-shot example shows the model: a short mythical/historical statement
     return (
-        f"Write a short lore fact (1 sentence) about the history of \"{world_name}\". "
-        f"It should mention {cfg['lore_hook']}.\n"
+        f"Example lore for a {cfg['adjectives']} RPG world:\n"
+        f"Lore: Legends say the ancient rulers vanished in a single night, leaving only their weapons behind.\n\n"
+        f"Write one lore sentence about the history of \"{world_name}\".\n"
+        f"It should be mysterious and mention {cfg['lore_hook']}.\n"
         f"Lore:"
     )
 

@@ -1,0 +1,24 @@
+============================================================
+  🌍  RPG WORLD — FANTASY  🌍
+============================================================
+
+  World Name:    Elven City
+
+  Description:
+    This is where you will find yourself immersed in an endless variety of stories that are not.
+
+  NPC:
+    Darlings and Furies; Eighty Kings & Two Demons— two Kingdoms/Three Lands! Each kingdom is set on four continents.
+
+  Quest:
+    Keep an empty chest of gold and keep it hidden in your vault until you have found that treasure!
+
+  Reward Item:
+    Ethereal Blade | sentences descriptions about it for the given item; paragraphs describing how you will use.
+
+  Lore:
+    Mythic legend says no evil has ever taken place anywhere - there was nothing wrong with it at all! The curse that.
+
+============================================================
+  Generated with: theme=fantasy | temperature=0.8 | max_length=250 | seed=None
+============================================================
