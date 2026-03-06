@@ -17,11 +17,8 @@ import os
 import time
 from generate import generate_world
 
-# ─────────────────────────────────────────────────────────────────────────────
-# EXPERIMENT DEFINITIONS
-# Each experiment is a dict of parameters to pass to generate_world().
-# We use a fixed seed=1 so that parameter effects (not randomness) explain differences.
-# ─────────────────────────────────────────────────────────────────────────────
+# --- Experiment definitions ---
+# Fixed seed=1 so parameter effects, not randomness, explain differences.
 
 EXPERIMENTS = [
     # ── Experiment 1: Low temperature — structured, deterministic output
@@ -87,9 +84,7 @@ EXPERIMENTS = [
 ]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# RUNNER
-# ─────────────────────────────────────────────────────────────────────────────
+# --- Runner ---
 
 def run_experiments(output_dir: str = "outputs/experiments"):
     """

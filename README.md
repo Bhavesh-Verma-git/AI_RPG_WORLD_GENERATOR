@@ -231,6 +231,8 @@ With more time and compute, the system could be significantly enhanced:
 
 6. **Retrieval-Augmented Generation (RAG)**: Augment the generator with a vector database of RPG lore snippets. Before generation, retrieve semantically relevant lore and inject it into the prompt, grounding the output in consistent world-building facts.
 
+7. **Extended Asset Generation**: Expand the generator beyond a single reward item to produce a complete set of game assets per world — including named weapons (e.g., swords, bows, staves), armour pieces, consumable items (potions, scrolls), and craftable materials. Each asset would be generated with its own targeted prompt and could be exported in structured JSON format for direct import into a game engine's item database.
+
 ---
 
 ## 📄 License

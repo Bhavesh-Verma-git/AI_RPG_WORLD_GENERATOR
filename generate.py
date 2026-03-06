@@ -1,13 +1,8 @@
 """
-generate.py — AI RPG World Generator
-======================================
-Generates procedural RPG world scenarios using DistilGPT2 from HuggingFace.
-All inference runs on CPU — no GPU required.
+generate.py - AI RPG World Generator
 
-APPROACH: Field-by-field generation.
-Instead of asking the model to generate all 6 fields at once (which is hard
-for a small model on CPU), we generate each field individually using a
-targeted prompt. This ensures all fields are always populated and readable.
+Generates procedural RPG world scenarios using DistilGPT2 from HuggingFace.
+Runs fully on CPU, no GPU required.
 
 Usage:
     python generate.py --theme fantasy
@@ -25,10 +20,8 @@ import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# THEME CONFIGURATIONS
-# Each theme defines context phrases that prime the model for that world flavour.
-# ─────────────────────────────────────────────────────────────────────────────
+# --- Theme configurations ---
+# Each theme defines context phrases to prime the model for that world style.
 
 THEME_CONFIGS = {
     "fantasy": {
@@ -103,10 +96,7 @@ def load_model(model_name: str = "distilgpt2"):
     return _tokenizer, _model
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CORE GENERATION PRIMITIVE
-# Generates a short completion for a given prompt.
-# ─────────────────────────────────────────────────────────────────────────────
+# --- Core generation function ---
 
 def _complete(
     prompt: str,
@@ -115,67 +105,58 @@ def _complete(
     temperature: float,
     max_new_tokens: int,
 ) -> str:
-    """
-    Generate a short text completion for the given prompt.
-    Returns only the newly generated text (not the prompt itself).
-    """
+    """Run the model on a prompt and return a short cleaned completion."""
     # Encode input; suppress attention_mask warning by encoding without padding
     input_ids = tokenizer.encode(prompt, return_tensors="pt")
 
     with torch.no_grad():
         output_ids = model.generate(
             input_ids,
-            max_new_tokens=max_new_tokens,   # Generate at most this many NEW tokens
-            do_sample=True,                  # Stochastic sampling for variety
+            max_new_tokens=max_new_tokens,
+            do_sample=True,
             temperature=max(temperature, 0.1),
-            top_p=0.92,                      # Nucleus sampling
-            top_k=50,                        # Limit sampling pool
-            repetition_penalty=1.3,         # Penalise repeated phrases
-            pad_token_id=50256,              # GPT2's EOS token ID (no padding needed)
+            top_p=0.92,
+            top_k=50,
+            repetition_penalty=1.3,
+            pad_token_id=50256,
         )
 
     # Slice off the input tokens → only the newly generated portion
     new_tokens = output_ids[0][input_ids.shape[1]:]
     completion = tokenizer.decode(new_tokens, skip_special_tokens=True)
 
-    # Return the first line only (or up to a period/newline) to keep it clean
     completion = completion.strip()
 
-    # ── Step 1: Cut at any field header or double-newline (restart of generation)
+    # Cut at field headers or double newline
     for stop in ["\n\n", "World Name:", "Description:", "NPC:", "Quest:", "Reward Item:", "Lore:"]:
         if stop in completion:
             completion = completion[:completion.index(stop)].strip()
 
-    # ── Step 2: Cut at the first single newline so we keep only one clean line
+    # Keep only the first line
     if "\n" in completion:
         completion = completion[:completion.index("\n")].strip()
 
-    # ── Step 3: Cut at the end of the first complete sentence (., !, ?)
-    # This prevents mid-sentence rambling that GPT2 is prone to.
+    # Trim to the first complete sentence
     for end_char in [".", "!", "?"]:
         idx = completion.find(end_char)
-        if idx != -1 and idx > 5:       # must be at least 5 chars in (not a decimal like "0.5")
+        if idx != -1 and idx > 5:
             completion = completion[:idx + 1].strip()
             break
 
-    # ── Step 4: Hard cap at 120 characters to prevent very long single sentences
+    # Hard cap at 120 chars
     if len(completion) > 120:
-        # Try to cut at the last word boundary before the 120-char limit
         completion = completion[:120].rsplit(" ", 1)[0].strip()
         if not completion.endswith((".", "!", "?")):
             completion += "."
 
-    # ── Step 5: Remove D&D-style stats, parenthetical numbers, math expressions
+    # Remove any remaining stat/number artifacts
     completion = _clean_text(completion)
 
     return completion if completion else "(not generated)"
 
 
 def _clean_text(text: str) -> str:
-    """
-    Remove game-stat artefacts that DistilGPT2 sometimes generates.
-    Strips patterns like: (5/10), 1 x 10, +2, = 0, (requires the following), etc.
-    """
+    """Strip stat artifacts and stray punctuation from generated text."""
     # Remove parenthetical content that looks like stats: (5), (1/10), (Vampire), (requires...)
     text = re.sub(r'\([^)]{0,40}\)', '', text)
     # Remove math-like expressions: 1 x 10/10 + 2 = 0
@@ -194,10 +175,7 @@ def _clean_text(text: str) -> str:
     return text
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# FIELD PROMPT BUILDERS
-# Each function builds a targeted prompt for one RPG world field.
-# ─────────────────────────────────────────────────────────────────────────────
+# --- Prompt builders (one per world field) ---
 
 def _build_name_prompt(cfg: dict) -> str:
     # One-shot example shows the model the exact format: short 2-3 word fantasy name
@@ -269,10 +247,7 @@ def _build_lore_prompt(cfg: dict, world_name: str) -> str:
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# WORLD GENERATOR
-# Core function — generates all 6 fields and formats the world scenario.
-# ─────────────────────────────────────────────────────────────────────────────
+# --- Main world generator ---
 
 def generate_world(
     theme: str = "fantasy",
@@ -280,20 +255,7 @@ def generate_world(
     max_length: int = 250,
     seed: int = None,
 ) -> str:
-    """
-    Generate a complete RPG world scenario using field-by-field generation.
-
-    Parameters
-    ----------
-    theme       : World theme — one of THEME_CONFIGS keys.
-    temperature : Controls creativity. Low (0.3) = structured. High (1.2) = creative.
-    max_length  : Controls tokens per field (total budget ÷ 6 fields).
-    seed        : Random seed for reproducibility. None = random each time.
-
-    Returns
-    -------
-    str : Formatted RPG world scenario string.
-    """
+    """Generate a complete RPG world scenario for the given theme and parameters."""
 
     # Validate theme
     if theme not in THEME_CONFIGS:
@@ -312,7 +274,7 @@ def generate_world(
     # Name gets fewer tokens (it's short); description/lore get more
     tokens_per_field = max(20, max_length // 6)
 
-    # ── Generate each field ────────────────────────────────────────────────────
+    # Generate each field separately with a targeted prompt
     world_name = _complete(_build_name_prompt(cfg), tokenizer, model, temperature, tokens_per_field)
     # Clean up world name — take only the first line
     world_name = world_name.split("\n")[0].strip().strip("-—").strip()
@@ -325,7 +287,7 @@ def generate_world(
     reward = _complete(_build_reward_prompt(cfg), tokenizer, model, temperature, tokens_per_field)
     lore = _complete(_build_lore_prompt(cfg, world_name), tokenizer, model, temperature, tokens_per_field * 2)
 
-    # ── Format the final output ────────────────────────────────────────────────
+    # Format and return the final world output
     world_text = _format_world(theme, world_name, description, npc, quest, reward, lore, temperature, max_length, seed)
     return world_text
 
@@ -372,9 +334,7 @@ def _format_world(
     return "\n".join(lines)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# OUTPUT SAVER
-# ─────────────────────────────────────────────────────────────────────────────
+# --- Output saver ---
 
 def save_output(text: str, theme: str, output_dir: str = "outputs") -> str:
     """Save the generated world scenario to a timestamped file in outputs/."""
@@ -387,9 +347,7 @@ def save_output(text: str, theme: str, output_dir: str = "outputs") -> str:
     return filepath
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CLI ENTRY POINT
-# ─────────────────────────────────────────────────────────────────────────────
+# --- CLI entry point ---
 
 def main():
     parser = argparse.ArgumentParser(
