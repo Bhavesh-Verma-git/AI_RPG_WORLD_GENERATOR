@@ -1,0 +1,20 @@
+# AI RPG World Generator — Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# ── Core ML ────────────────────────────────────────────────────────────────────
+# HuggingFace transformers library — provides GPT2 tokenizer and model
+transformers>=4.40.0
+
+# PyTorch — the deep learning backend (CPU-only version is fine)
+# If you have CUDA, replace with the appropriate torch+cu version from pytorch.org
+torch>=2.2.0
+
+# ── API ────────────────────────────────────────────────────────────────────────
+# FastAPI — modern, fast web framework for building APIs
+fastapi>=0.111.0
+
+# Uvicorn — ASGI server for running FastAPI locally
+uvicorn>=0.29.0
+
+# Pydantic — data validation used internally by FastAPI
+pydantic>=2.7.0

@@ -1,0 +1,36 @@
+============================================================
+  🌍  RPG WORLD — FANTASY  🌍
+============================================================
+
+  World Name:
+    Silvergrove Hollow
+
+  Description:
+    A twilight-touched forest where ancient silver trees tower above a hidden
+    village of exiled mages. The air hums with dormant enchantments, and every
+    sunset is said to be different from the last — conjured by the trees themselves.
+
+  NPC:
+    Mireth the Dawnspoken — a blind archivist who reads destiny through the
+    rustling of enchanted leaves. She guards the Vault of Unwritten Futures.
+
+  Quest:
+    Recover three Shards of the Moonpact scattered across the forest by a
+    grieving archmage who shattered the original binding stone in sorrow.
+
+  Reward Item:
+    Verdant Spellblade — a sword whose hilt grows living vines that restore
+    a small amount of health with every strike landed on an enchanted foe.
+
+  Lore:
+    Silvergrove was once the capital of the Glimmering Compact, a council of
+    mages who sought to end all wars through prophetic diplomacy. Their last
+    prophecy warned of their own destruction — and no one believed it.
+
+============================================================
+
+Generated with:
+  theme        = fantasy
+  temperature  = 0.8
+  max_length   = 250
+  seed         = 42

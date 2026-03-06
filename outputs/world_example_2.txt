@@ -1,0 +1,38 @@
+============================================================
+  🌍  RPG WORLD — DARK FANTASY  🌍
+============================================================
+
+  World Name:
+    The Sunken Keep of Malgrath
+
+  Description:
+    A half-submerged fortress at the edge of a black swamp where the water
+    never freezes and the fog never clears. The Keep was once a seat of
+    knightly order; now its halls ring with the sound of dragging chains.
+
+  NPC:
+    Sister Vareth the Chainbound — an excommunicated healer who severed her
+    own shadow to prevent a cursed ritual, and now cast no reflection. She
+    trades information for acts of mercy done in her name.
+
+  Quest:
+    Find and destroy the Heartstone of Malgrath — a pulsing shard of obsidian
+    that animates the dead within a half-league radius. It is buried beneath
+    the Keep's flooded throne room, guarded by the last knight.
+
+  Reward Item:
+    Ashveil Cloak — a cloak woven from the smoke of a cursed pyre that grants
+    the wearer invisibility to undead and muffles the sound of breathing.
+
+  Lore:
+    The Order of Malgrath fell in a single night when their Grand Chaplain,
+    consumed by grief after the death of his daughter, bargained with a death
+    god for her return. She returned. She was not alone.
+
+============================================================
+
+Generated with:
+  theme        = dark_fantasy
+  temperature  = 0.8
+  max_length   = 250
+  seed         = 42

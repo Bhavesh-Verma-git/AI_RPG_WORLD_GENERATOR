@@ -1,0 +1,39 @@
+============================================================
+  🌍  RPG WORLD — DESERT  🌍
+============================================================
+
+  World Name:
+    The Amber Basin of Ur-Satal
+
+  Description:
+    An immense crater-basin of amber-hued sand where the heat distortion makes
+    distant dunes look like cities. Buried beneath the surface are the perfectly
+    preserved remnants of Ur-Satal — a civilisation that wrote in fire rather
+    than ink.
+
+  NPC:
+    Danesh of the Empty Canteen — a cartographer who has mapped every dune
+    field and oasis in the Basin, except for the one he is looking for. He
+    believes the Oasis of Ruin lies three days east and one lifetime away.
+
+  Quest:
+    Retrieve the Fire-Writ Tablets from the Ur-Satal archive before a rival
+    guild of treasure hunters uses them to summon Ur-Satal's sand-god back
+    from the amber depths.
+
+  Reward Item:
+    Scorchmantle Staff — a staff topped with a lens that focuses sunlight into
+    a searing beam. Charges twice as fast at high noon. Useless underground.
+
+  Lore:
+    Ur-Satal did not fall to war or plague. Its scholars, obsessed with
+    permanence, attempted to record the entire universe in fire. The universe,
+    it turned out, was not interested in being recorded.
+
+============================================================
+
+Generated with:
+  theme        = desert
+  temperature  = 0.8
+  max_length   = 250
+  seed         = 42
