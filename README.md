@@ -233,38 +233,6 @@ With more time and compute, the system could be significantly enhanced:
 
 ---
 
-## 📖 How to Explain This Project to a Recruiter
-
-### How does the language model generate text?
-
-DistilGPT2 is a **transformer-based language model** trained to predict the next word in a sequence. Given the tokens in the prompt, the model outputs a probability distribution over the entire vocabulary for the next token. We sample from this distribution, append the chosen token, and repeat — producing text token by token. All of this happens through a **forward pass** of the neural network; no training occurs at inference time.
-
-### How does prompt engineering control output structure?
-
-By providing the model with a **few-shot example** of a complete RPG world in the prompt, we show it the exact format we expect. The model has learned during pretraining that text often continues in the same pattern as what it has seen. Our structured prompt exploits this to produce consistently formatted outputs — no fine-tuning required.
-
-### How does temperature affect creativity?
-
-Temperature **scales the logits** (raw scores) before the softmax that converts them into probabilities. Low temperature (e.g., 0.3) sharpens the distribution — the model almost always picks the most probable token, producing conservative, predictable text. High temperature (e.g., 1.2) flattens the distribution — less probable tokens get a real chance, producing more surprising, creative, but sometimes less coherent text.
-
-### Why were parameter experiments performed?
-
-Different games need different styles of content. A dungeon generator wants **structured, predictable** descriptions (low temperature). A random encounter generator benefits from **surprising, creative** events (high temperature). By systematically varying parameters and recording outputs, we can recommend the best settings for each use case — this is the same principle as hyperparameter tuning in supervised learning.
-
----
-
-## 📦 Dependencies
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `transformers` | >=4.40.0 | HuggingFace model loading & inference |
-| `torch` | >=2.2.0 | PyTorch deep learning backend |
-| `fastapi` | >=0.111.0 | REST API framework |
-| `uvicorn` | >=0.29.0 | ASGI server for FastAPI |
-| `pydantic` | >=2.7.0 | Data validation (FastAPI dependency) |
-
----
-
 ## 📄 License
 
 MIT License — free to use, modify, and distribute.
