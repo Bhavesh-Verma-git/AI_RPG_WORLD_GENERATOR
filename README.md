@@ -101,9 +101,9 @@ git clone https://github.com/YOUR_USERNAME/AI-RPG-WORLD-GENERATOR.git
 cd AI-RPG-WORLD-GENERATOR
 
 # Create and activate virtual environment
-python -m venv venv
-venv\Scripts\activate          # Windows
-# source venv/bin/activate     # Mac/Linux
+python -m venv rpg_env
+rpg_env\Scripts\activate          # Windows
+# source rpg_env/bin/activate     # Mac/Linux
 
 pip install -r requirements.txt
 ```
@@ -257,11 +257,11 @@ Different games need different styles of content. A dungeon generator wants **st
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `transformers` | 4.40.1 | HuggingFace model loading & inference |
-| `torch` | 2.2.2 | PyTorch deep learning backend |
-| `fastapi` | 0.111.0 | REST API framework |
-| `uvicorn` | 0.29.0 | ASGI server for FastAPI |
-| `pydantic` | 2.7.1 | Data validation (FastAPI dependency) |
+| `transformers` | >=4.40.0 | HuggingFace model loading & inference |
+| `torch` | >=2.2.0 | PyTorch deep learning backend |
+| `fastapi` | >=0.111.0 | REST API framework |
+| `uvicorn` | >=0.29.0 | ASGI server for FastAPI |
+| `pydantic` | >=2.7.0 | Data validation (FastAPI dependency) |
 
 ---
 
